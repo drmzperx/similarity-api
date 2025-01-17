@@ -14,7 +14,7 @@ model = SentenceTransformer(modelName)
 class Query(BaseModel):
     query: str
     corpus: List[str]
-
+    authid: List[str]
 
 @app.get("/")
 def read_root():
@@ -22,10 +22,11 @@ def read_root():
 
 
 @app.post("/similarity/{domain}")
-def read_item(domain: str, query: Query):
+def read_item(domain: str, query: Query | None = None):
     print("Model: " + modelName)
     print("Domain: " + domain)
-    
+    print("Body: " + str(query))
+
     corpus = query.corpus
     
     queryIn = query.query
@@ -44,7 +45,6 @@ def read_item(domain: str, query: Query):
         print(corpus[idx], "(Score: {:.4f})".format(score))
 
     return list_results
-
 
 @app.get("/test/{text}")
 def update_item(text: str):
