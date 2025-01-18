@@ -25,13 +25,14 @@ def read_root():
 def read_item(domain: str, query: Query | None = None):
     print("Model: " + modelName)
     print("Domain: " + domain)
-    print("Body: " + str(query))
+    # print("Body: " + str(query))
 
     corpus = query.corpus
+    authids = query.authid
     
     queryIn = query.query
-    print("Query: " + queryIn)
-    print("Corpus: " + str(corpus))
+    # print("Query: " + queryIn)
+    # print("Corpus: " + str(corpus))
 
     query_embedding = model.encode(queryIn)
     corpus_embeddings = model.encode(corpus)
@@ -42,9 +43,13 @@ def read_item(domain: str, query: Query | None = None):
     list_results = []
     for score, idx in zip(top_results[0], top_results[1]):
         list_results.append({"text": corpus[idx], "sim": "{:.4f}".format(score)})
-        print(corpus[idx], "(Score: {:.4f})".format(score))
+        print(authids[idx], "(Score: {:.4f})".format(score))
 
     return list_results
+
+@app.get("/status")
+def update_item():
+    return {"status": "ok", "model": modelName}
 
 @app.get("/test/{text}")
 def update_item(text: str):
