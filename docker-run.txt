@@ -3,3 +3,12 @@ docker-compose up -d --no-deps --build
 docker run -p 5000:5000 similarity-api
 
 fastapi dev main.py --port 5000
+
+
+##Other docker purge commands
+
+sudo docker system prune -a -f
+
+sudo docker rm -v $(sudo docker ps -a -q -f status=exited)
+sudo docker rmi -f  $(sudo docker images -f "dangling=true" -q)
+docker volume ls -qf dangling=true | xargs -r docker volume rm
