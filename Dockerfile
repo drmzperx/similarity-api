@@ -19,4 +19,6 @@ FROM python:3.13-slim
 COPY --from=BUILD . .
 
 COPY ./ $APP_HOME
-CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "5000"]
+#--reload only dev mode
+#CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "5000", "--workers", "1"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "1"]
