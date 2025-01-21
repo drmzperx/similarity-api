@@ -1,5 +1,5 @@
 #Builder base
-FROM python:3.13-slim as BUILD
+FROM python:3.13-slim AS builder
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV APP_HOME=/home/app
@@ -16,7 +16,7 @@ RUN pip install huggingface_hub sentence-transformers==3.3.1 --no-deps
 #Production base
 FROM python:3.13-slim
 
-COPY --from=BUILD . .
+COPY --from=builder . .
 
 COPY ./ $APP_HOME
 #--reload only dev mode
