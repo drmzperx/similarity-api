@@ -8,7 +8,7 @@ from typing import List
 
 app = FastAPI()
 
-modelName = "drmzperx/inci-all-MiniLM-L6-v3"
+modelName = "drmzperx/inci-all-MiniLM-L6-v4"
 model = SentenceTransformer(modelName)
 
 class Query(BaseModel):
