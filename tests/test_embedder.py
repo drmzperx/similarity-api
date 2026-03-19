@@ -77,6 +77,32 @@ class TestLoadSynonyms:
         result = load_synonyms(str(f))
         assert "benzyl_alcohol" not in result.get("aqua", set())
 
+    def test_ignores_near_miss_score(self, tmp_path):
+        f = tmp_path / "s.jsonl"
+        f.write_text('{"base_inci": "aqua", "sim_inci": "water", "score": 0.99}\n')
+        result = load_synonyms(str(f))
+        assert "water" not in result.get("aqua", set())
+
+    def test_skips_empty_lines(self, tmp_path):
+        f = tmp_path / "s.jsonl"
+        f.write_text(
+            '{"base_inci": "aqua", "sim_inci": "water", "score": 1.0}\n'
+            '\n'
+            '{"base_inci": "glycerin", "sim_inci": "glycerol", "score": 1.0}\n'
+        )
+        result = load_synonyms(str(f))
+        assert "water" in result.get("aqua", set())
+        assert "glycerol" in result.get("glycerin", set())
+
+    def test_skips_malformed_json(self, tmp_path):
+        f = tmp_path / "s.jsonl"
+        f.write_text(
+            '{"base_inci": "aqua", "sim_inci": "water", "score": 1.0}\n'
+            'not valid json\n'
+        )
+        result = load_synonyms(str(f))
+        assert "water" in result.get("aqua", set())
+
 
 # --- embed_ingredient --------------------------------------------------------
 
@@ -90,7 +116,9 @@ class TestEmbedIngredient:
         assert embed_ingredient("unknown_thing", FAKE_VOCAB, FAKE_WEIGHTS) is None
 
     def test_normalizes_before_lookup(self):
-        assert embed_ingredient("  Aqua  ", FAKE_VOCAB, FAKE_WEIGHTS) is not None
+        vec = embed_ingredient("  Aqua  ", FAKE_VOCAB, FAKE_WEIGHTS)
+        assert vec is not None
+        np.testing.assert_array_equal(vec, [1.0, 0.0])
 
 
 # --- embed_list --------------------------------------------------------------
@@ -103,6 +131,11 @@ class TestEmbedList:
     def test_too_many_unknowns_raises(self):
         with pytest.raises(ValueError, match="unknown"):
             embed_list("x, y, z", FAKE_VOCAB, FAKE_WEIGHTS)
+
+    def test_threshold_boundary_raises(self):
+        # 2/3 unknown = 66.7% > 50% threshold -> should raise
+        with pytest.raises(ValueError, match="unknown"):
+            embed_list("aqua, x, y", FAKE_VOCAB, FAKE_WEIGHTS)
 
     def test_single_ingredient(self):
         result = embed_list("aqua", FAKE_VOCAB, FAKE_WEIGHTS)
