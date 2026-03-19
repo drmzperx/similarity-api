@@ -1,56 +1,51 @@
+import os
 from typing import Union
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer, util # type: ignore
-import torch
-from typing import List
+
+from embedder import Embedder
 
 app = FastAPI()
 
-modelName = "drmzperx/inci-all-MiniLM-L6-v4"
-model = SentenceTransformer(modelName)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+modelName = "incitrainer/inci-w2v-embedder"
+
+embedder = Embedder(
+    embeddings_path=os.path.join(BASE_DIR, "models", "inci_embeddings.pt"),
+    regression_path=os.path.join(BASE_DIR, "models", "inci_regression.pt"),
+    synos_path=os.path.join(BASE_DIR, "models", "inci_synos.jsonl"),
+)
+
 
 class Query(BaseModel):
-    query: str
-    corpus: List[str]
-    authid: List[str]
+    list_a: str
+    list_b: str
+
 
 @app.get("/")
 def read_root():
-    return {"Skinlyzer": "Similarity API v1"}
+    return {"Skinlyzer": "Similarity API v2"}
 
 
 @app.post("/similarity/{domain}")
-def read_item(domain: str, query: Query | None = None):
+def similarity(domain: str, query: Query):
     print("Model: " + modelName)
     print("Domain: " + domain)
-    # print("Body: " + str(query))
 
-    corpus = query.corpus
-    authids = query.authid
-    
-    queryIn = query.query
-    # print("Query: " + queryIn)
-    # print("Corpus: " + str(corpus))
+    try:
+        result = embedder.compare(query.list_a, query.list_b)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
-    query_embedding = model.encode(queryIn)
-    corpus_embeddings = model.encode(corpus)
+    return result
 
-    dot_scores = util.cos_sim(query_embedding, corpus_embeddings)[0]
-    top_results = torch.topk(dot_scores, k=len(corpus))
-
-    list_results = []
-    for score, idx in zip(top_results[0], top_results[1]):
-        list_results.append({"text": corpus[idx], "sim": "{:.4f}".format(score)})
-        print(authids[idx], "(Score: {:.4f})".format(score))
-
-    return list_results
 
 @app.get("/status")
-def update_item():
+def status():
     return {"status": "ok", "model": modelName}
 
+
 @app.get("/test/{text}")
-def update_item(text: str):
+def echo(text: str):
     return {"text": text}
