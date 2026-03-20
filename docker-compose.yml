@@ -1,6 +1,6 @@
-#version: "3.3"
+version: "3"
 services:
-  rest:
+  similarity:
     container_name: similarity-api
     image: skinlyzer/similarity-api
     ports: 
