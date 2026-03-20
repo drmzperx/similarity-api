@@ -2,17 +2,6 @@ fastapi[standard]>=0.113.0,<0.114.0
 pydantic>=2.7.0,<3.0.0
 uvicorn[standard]
 numpy
-requests
-tqdm
-transformers
-tokenizers
-threadpoolctl
-typer
 typing_extensions
-scipy
-regex
-scikit-learn
-pillow
-#-f https://download.pytorch.org/whl/cpu
-#torch[cpuonly]
+torch
 #sentence-transformers==3.3.1 --no-deps
